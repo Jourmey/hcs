@@ -1,6 +1,9 @@
-package dao
+package agent
 
-import "time"
+import (
+	"hcs/dao"
+	"time"
+)
 
 const DBAgent = "agent"
 
@@ -17,4 +20,9 @@ type Agent struct {
 
 func (Agent) TableName() string {
 	return DBAgent
+}
+
+func Insert(a *Agent) (int, error) {
+	err := dao.DB().Create(a).Error
+	return a.ID, err
 }

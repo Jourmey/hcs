@@ -2,83 +2,49 @@ package hcs
 
 import (
 	"github.com/gin-gonic/gin"
-	"hcs/dao"
 	"hcs/internal"
 )
 
-type PutAgentRequest struct {
-	HostName string `json:"host_name"` // hostname
-	Name     string `json:"name"`      // 主机名
-	Version  string `json:"version"`   // agent版本
-	Mark     string `json:"mark"`      // agent备注
-}
-
-type (
-	HeartRequest struct {
-		AgentID int `json:"agent_id"`
-	}
-
-	HeartResponse struct {
-		Status int `json:"status"`
-	}
-)
-
-type (
-	GetTaskRequest struct {
-		AgentID int `json:"agent_id"`
-	}
-
-	GetTaskResponse struct {
-		Task []dao.Task `json:"task"`
-	}
-)
-
-type (
-	PutTaskRequest struct {
-		AgentID int `json:"agent_id"`
-		TaskID  int `json:"task_id"`
-	}
-
-	PutTaskResponse struct {
-	}
-)
-
 func PutAgent(c *gin.Context) {
-	p := new(PutAgentRequest)
+	p := new(internal.PutAgentRequest)
 	if err := c.ShouldBindJSON(&p); err != nil {
-		internal.SetResult(c, internal.ErrorCode, nil, err.Error())
+		internal.Return(c, nil, err)
 		return
 	}
 
-	internal.SetResult(c, internal.SuccessCode, nil, internal.SuccessMsg)
+	res, err := internal.PutAgent(p)
+	internal.Return(c, internal.PutAgentResponse{AgentID: res}, err)
 }
 
 func Heart(c *gin.Context) {
-	p := new(HeartRequest)
+	p := new(internal.HeartRequest)
 	if err := c.ShouldBindJSON(&p); err != nil {
-		internal.SetResult(c, internal.ErrorCode, nil, err.Error())
+		internal.Return(c, nil, err)
 		return
 	}
 
-	internal.SetResult(c, internal.SuccessCode, nil, internal.SuccessMsg)
+	status, err := internal.Heart(p)
+	internal.Return(c, internal.HeartResponse{Status: status}, err)
 }
 
 func GetTask(c *gin.Context) {
-	p := new(GetTaskRequest)
+	p := new(internal.GetTaskRequest)
 	if err := c.ShouldBindJSON(&p); err != nil {
-		internal.SetResult(c, internal.ErrorCode, nil, err.Error())
+		internal.Return(c, nil, err)
 		return
 	}
 
-	internal.SetResult(c, internal.SuccessCode, nil, internal.SuccessMsg)
+	res, err := internal.GetTask(p)
+	internal.Return(c, internal.GetTaskResponse{Task: res}, err)
 }
 
 func PutTask(c *gin.Context) {
-	p := new(PutTaskRequest)
+	p := new(internal.PutTaskRequest)
 	if err := c.ShouldBindJSON(&p); err != nil {
-		internal.SetResult(c, internal.ErrorCode, nil, err.Error())
+		internal.Return(c, nil, err)
 		return
 	}
 
-	internal.SetResult(c, internal.SuccessCode, nil, internal.SuccessMsg)
+	err := internal.PutTask(p)
+	internal.Return(c, "", err)
 }
