@@ -2,7 +2,49 @@ package internal
 
 import (
 	"hcs/dao/agent"
+	"hcs/dao/agent_task"
 	"hcs/dao/task"
+)
+
+type (
+	PutAgentRequest struct {
+		HostName string `json:"host_name"` // hostname
+		Name     string `json:"name"`      // 主机名
+		Version  string `json:"version"`   // agent版本
+		Mark     string `json:"mark"`      // agent备注
+	}
+	PutAgentResponse struct {
+		AgentID int `json:"agent_id"`
+	}
+)
+
+type (
+	HeartRequest struct {
+		AgentID int `json:"agent_id"`
+	}
+
+	HeartResponse struct {
+		Status int `json:"status"`
+	}
+)
+
+type (
+	GetTaskRequest struct {
+		AgentID int `form:"agent_id"`
+	}
+
+	GetTaskResponse struct {
+		Task []task.Task `json:"task"`
+	}
+)
+
+type (
+	PutTaskRequest struct {
+		Task []agenttask.AgentTaskSimple
+	}
+
+	//PutTaskResponse struct {
+	//}
 )
 
 func PutAgent(p *PutAgentRequest) (int, error) {
@@ -17,14 +59,45 @@ func PutAgent(p *PutAgentRequest) (int, error) {
 }
 
 func Heart(p *HeartRequest) (int, error) {
-	return task.Finished, nil
+	err := agent.UpdateHeart(p.AgentID)
+	if err != nil {
+		return 0, err
+	}
+
+	t, err := agenttask.FindStatusMin(p.AgentID)
+	if err != nil {
+		return 0, err
+	}
+
+	return t.Status, nil
 
 }
+
 func GetTask(p *GetTaskRequest) ([]task.Task, error) {
-	return nil, nil
+	t, err := agenttask.FindTask(p.AgentID)
+	if err != nil {
+		return nil, err
+	}
+	if len(t) == 0 {
+		return nil, nil
+	}
 
+	ids := make([]int, 0, len(t))
+	for i := 0; i < len(t); i++ {
+		ids = append(ids, t[i].TaskId)
+	}
+	tasks, err := task.FindByIds(ids)
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
 }
-func PutTask(p *PutTaskRequest) error {
-	return nil
 
+func PutTask(p *PutTaskRequest) error {
+	if len(p.Task) == 0 {
+		return nil
+	}
+
+	return agenttask.UpdateStatus(p.Task)
 }

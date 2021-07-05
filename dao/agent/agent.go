@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-const DBAgent = "agent"
+const DBName = "agent"
 
 type Agent struct {
 	ID         int       `gorm:"column:id"`         // 主键ID
@@ -19,10 +19,17 @@ type Agent struct {
 }
 
 func (Agent) TableName() string {
-	return DBAgent
+	return DBName
 }
 
 func Insert(a *Agent) (int, error) {
 	err := dao.DB().Create(a).Error
 	return a.ID, err
+}
+
+func UpdateHeart(id int) error {
+	err := dao.DB().
+		Update("heart_time = ?", time.Now()).
+		Where("id = ?", id).Error
+	return err
 }

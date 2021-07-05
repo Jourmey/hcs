@@ -29,7 +29,7 @@ func Heart(c *gin.Context) {
 
 func GetTask(c *gin.Context) {
 	p := new(internal.GetTaskRequest)
-	if err := c.ShouldBindJSON(&p); err != nil {
+	if err := c.ShouldBindQuery(p); err != nil {
 		internal.Return(c, nil, err)
 		return
 	}

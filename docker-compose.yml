@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  mysql:
+    image: 'mysql:latest'
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_DATABASE=hcs
+      - MYSQL_USER=hcs
+      - MYSQL_PASSWORD=hcs
+      - MYSQL_RANDOM_ROOT_PASSWORD="yes"
