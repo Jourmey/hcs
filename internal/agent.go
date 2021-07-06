@@ -24,7 +24,7 @@ type (
 	}
 
 	HeartResponse struct {
-		Status int `json:"status"`
+		Status bool `json:"status"`
 	}
 )
 
@@ -34,13 +34,13 @@ type (
 	}
 
 	GetTaskResponse struct {
-		Task []task.Task `json:"task"`
+		Task []task.TaskSimple `json:"task"`
 	}
 )
 
 type (
 	PutTaskRequest struct {
-		Task []agenttask.AgentTaskSimple
+		Task []agenttask.AgentTaskSimple `json:"task"`
 	}
 
 	//PutTaskResponse struct {
@@ -58,19 +58,14 @@ func PutAgent(p *PutAgentRequest) (int, error) {
 	return agent.Insert(&t)
 }
 
-func Heart(p *HeartRequest) (int, error) {
+func Heart(p *HeartRequest) (bool, error) {
 	err := agent.UpdateHeart(p.AgentID)
 	if err != nil {
-		return 0, err
+		return false, err
 	}
 
-	t, err := agenttask.FindStatusMin(p.AgentID)
-	if err != nil {
-		return 0, err
-	}
-
-	return t.Status, nil
-
+	t, err := agenttask.Exist(p.AgentID, agenttask.Normal)
+	return t, nil
 }
 
 func GetTask(p *GetTaskRequest) ([]task.Task, error) {

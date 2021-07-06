@@ -20,6 +20,11 @@ func (Task) TableName() string {
 	return DBName
 }
 
+type TaskSimple struct {
+	ID      int    `json:"id"`      // 主键ID
+	Content string `json:"content"` // 任务内容
+}
+
 func Insert(t *Task) (int, error) {
 	err := dao.DB().Create(t).Error
 	return t.ID, err

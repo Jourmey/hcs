@@ -23,13 +23,14 @@ func (Agent) TableName() string {
 }
 
 func Insert(a *Agent) (int, error) {
-	err := dao.DB().Create(a).Error
+	err := dao.DB().Omit("create_time", "update_time", "heart_time").Create(a).Error
 	return a.ID, err
 }
 
 func UpdateHeart(id int) error {
 	err := dao.DB().
-		Update("heart_time = ?", time.Now()).
+		Table(DBName).
+		Update("heart_time", time.Now()).
 		Where("id = ?", id).Error
 	return err
 }
