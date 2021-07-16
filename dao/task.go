@@ -1,12 +1,11 @@
-package task
+package dao
 
 import (
 	"github.com/jinzhu/gorm"
-	"hcs/dao"
 	"time"
 )
 
-const DBName = "task"
+const DBTaskName = "task"
 
 type Task struct {
 	ID         int       `gorm:"column:id"`          // 主键ID
@@ -17,7 +16,7 @@ type Task struct {
 }
 
 func (Task) TableName() string {
-	return DBName
+	return DBTaskName
 }
 
 type TaskSimple struct {
@@ -25,27 +24,43 @@ type TaskSimple struct {
 	Content string `json:"content"` // 任务内容
 }
 
-func Insert(t *Task) (int, error) {
-	err := dao.DB().Create(t).Error
+type TaskDao struct{}
+
+func (td *TaskDao) Insert(t *Task) (int, error) {
+	err := DB().Create(t).Error
 	return t.ID, err
 }
 
-func FindByIds(ids []int) ([]Task, error) {
-	return finds(func(d *gorm.DB) *gorm.DB {
+func (td *TaskDao) FindByIds(ids []int) ([]Task, error) {
+	return td.finds(func(d *gorm.DB) *gorm.DB {
 		return d.Where("id in (?)", ids)
 	})
 }
 
-func find(fu func(d *gorm.DB) *gorm.DB) (t *Task, err error) {
-	err = fu(dao.DB()).
+func (td *TaskDao) find(fu func(d *gorm.DB) *gorm.DB) (t *Task, err error) {
+	err = fu(DB()).
 		Where("delete_flag = ?", 0).
 		First(t).Error
 	return
 }
 
-func finds(fu func(d *gorm.DB) *gorm.DB) (t []Task, err error) {
-	err = fu(dao.DB()).
+func (td *TaskDao) finds(fu func(d *gorm.DB) *gorm.DB) (t []Task, err error) {
+	err = fu(DB()).
 		Where("delete_flag = ?", 0).
 		Find(&t).Error
 	return
+}
+
+// 逻辑删除
+func (td *TaskDao) Delete(id int) error {
+	err := DB().Table(DBAgentTaskName).
+		Update("delete_flag", 1).
+		Where("id = ?", id).Error
+	return err
+}
+
+func (td *TaskDao) FindAll() ([]Task, error) {
+	return td.finds(func(d *gorm.DB) *gorm.DB {
+		return d
+	})
 }

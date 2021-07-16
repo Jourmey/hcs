@@ -1,12 +1,11 @@
-package agenttask
+package dao
 
 import (
 	"github.com/jinzhu/gorm"
-	"hcs/dao"
 	"time"
 )
 
-const DBName = "agent_task"
+const DBAgentTaskName = "agent_task"
 
 type AgentTask struct {
 	ID         int       `gorm:"column:id"` // 主键ID
@@ -21,7 +20,7 @@ type AgentTask struct {
 }
 
 func (AgentTask) TableName() string {
-	return DBName
+	return DBAgentTaskName
 }
 
 // Status
@@ -32,42 +31,44 @@ const (
 	Finished            // 任务执行成功。
 )
 
+type AgentTaskDao struct{}
+
 type AgentTaskSimple struct {
 	ID     int    `json:"id"`     // 主键ID
 	Status int    `json:"status"` // 任务状态
 	Reason string `json:"reason"` // 任务状态原因
 }
 
-func Insert(t *AgentTask) (int, error) {
-	err := dao.DB().Create(t).Error
+func (a *AgentTaskDao) Insert(t *AgentTask) (int, error) {
+	err := DB().Create(t).Error
 	return t.ID, err
 }
 
-func find(fu func(d *gorm.DB) *gorm.DB) (*AgentTask, error) {
+func (a *AgentTaskDao) find(fu func(d *gorm.DB) *gorm.DB) (*AgentTask, error) {
 	t := new(AgentTask)
-	err := fu(dao.DB()).
+	err := fu(DB()).
 		Where("delete_flag = ?", 0).
 		First(t).Error
 	return t, err
 }
 
-func finds(fu func(d *gorm.DB) *gorm.DB) ([]AgentTask, error) {
+func (a *AgentTaskDao) finds(fu func(d *gorm.DB) *gorm.DB) ([]AgentTask, error) {
 	var t []AgentTask
-	err := fu(dao.DB()).
+	err := fu(DB()).
 		Where("delete_flag = ?", 0).
 		Find(&t).Error
 	return t, err
 }
 
-func FindTask(agentId int) ([]AgentTask, error) {
-	return finds(func(d *gorm.DB) *gorm.DB {
+func (a *AgentTaskDao) FindTask(agentId int) ([]AgentTask, error) {
+	return a.finds(func(d *gorm.DB) *gorm.DB {
 		return d.Where("agent_id = ?", agentId).
 			Where("status = ?", Normal)
 	})
 }
 
-func Exist(agentId int, status int) (bool, error) {
-	r, err := find(func(d *gorm.DB) *gorm.DB {
+func (a *AgentTaskDao) Exist(agentId int, status int) (bool, error) {
+	r, err := a.find(func(d *gorm.DB) *gorm.DB {
 		return d.Where("agent_id = ?", agentId).
 			Where("status = ?", status)
 	})
@@ -80,9 +81,9 @@ func Exist(agentId int, status int) (bool, error) {
 	return r.ID != 0, nil
 }
 
-func UpdateStatus(tasks []AgentTaskSimple) error {
+func (a *AgentTaskDao) UpdateStatus(tasks []AgentTaskSimple) error {
 	for i := 0; i < len(tasks); i++ {
-		err := dao.DB().Table(DBName).
+		err := DB().Table(DBAgentTaskName).
 			Update("status", tasks[i].Status).
 			Update("reason", tasks[i].Reason).
 			Where("id = ?", tasks[i].ID).Error
@@ -92,4 +93,17 @@ func UpdateStatus(tasks []AgentTaskSimple) error {
 	}
 
 	return nil
+}
+
+func (a *AgentTaskDao) FindAll() ([]AgentTask, error) {
+	return a.finds(func(d *gorm.DB) *gorm.DB {
+		return d
+	})
+}
+
+func (a *AgentTaskDao) Delete(relationId int) error {
+	err := DB().Table(DBAgentTaskName).
+		Update("delete_flag", 1).
+		Where("id = ?", relationId).Error
+	return err
 }
